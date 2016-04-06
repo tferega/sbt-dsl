@@ -1,7 +1,7 @@
 package com.dslplatform.sbtdsl
+package plugin
 
 import sbt._
-import Keys._
 
 object SbtDslPlugin extends AutoPlugin {
   object autoImport {

@@ -4,19 +4,14 @@ package plugin
 import sbt._
 
 object SbtDslPlugin extends AutoPlugin {
-  object autoImport {
-    sealed trait Target
-    object Target {
-      case object RevenjJava extends Target
-      case object JavaPojo extends Target
-    }
-
-    lazy val dslTargets = SettingKey[Seq[Target]]("dsl-targets", "Convert DSL to specified target (Java client, PHP, Revenj server, ...)")
-  }
-
+  object autoImport extends core.Params
   import autoImport._
 
+  val dslApply = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
+  val dslTargets = SettingKey[Seq[Target]]("dsl-targets", "Convert DSL to specified target (Java client, PHP, Revenj server, ...)")
+
   override lazy val projectSettings = Seq(
+    dslApply := { println("Apply DS: " + dslTargets.value) },
     dslTargets := Nil
   )
 }

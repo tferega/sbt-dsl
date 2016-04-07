@@ -5,9 +5,9 @@ import sbt._
 
 object SbtDslPlugin extends AutoPlugin {
   object autoImport {
-    val Params = core.Params
+    val Options = core.Options
     val dslApply = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
-    val dslTargets = SettingKey[Seq[Params.Target]]("dsl-targets", "Convert DSL to specified target (Java client, PHP, Revenj server, ...)")
+    val dslTargets = SettingKey[Seq[Options.Target]]("dsl-targets", "Convert DSL to specified target (Java client, PHP, Revenj server, ...)")
   }
   import autoImport._
 

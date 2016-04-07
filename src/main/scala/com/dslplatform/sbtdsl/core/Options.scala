@@ -1,7 +1,7 @@
 package com.dslplatform.sbtdsl
 package core
 
-trait Params {
+trait Options {
   sealed trait Target
   object Target {
     case object RevenjJava extends Target
@@ -9,4 +9,4 @@ trait Params {
   }
 }
 
-object Params extends Params
+object Options extends Options

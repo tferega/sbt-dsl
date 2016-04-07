@@ -1,10 +1,12 @@
 package com.dslplatform.sbtdsl
 package core
 
-object Params {
+trait Params {
   sealed trait Target
   object Target {
     case object RevenjJava extends Target
     case object JavaPojo extends Target
   }
 }
+
+object Params extends Params

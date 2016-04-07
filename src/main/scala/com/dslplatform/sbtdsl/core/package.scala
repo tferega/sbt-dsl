@@ -4,7 +4,9 @@ import com.dslplatform.compiler.client.{ Context => ClcContext, Main => ClcMain 
 import com.dslplatform.compiler.client.{ parameters => clc }
 
 package object core {
-  def compileDsl(paths: Options.Paths): Unit = {
+  import Options._
+
+  def compileDsl(targets: Seq[Target], paths: Options.Paths): Unit = {
     val context = new ClcContext()
 
     // Basic settings
@@ -13,7 +15,11 @@ package object core {
     context.put(clc.PostgresConnection.INSTANCE, "localhost:5432/storage_db?user=storage_user&password=storage_pass")
 
     // Target settings
-    context.put("revenj.java", "lib/storage-revenj.jar")
+    targets foreach { target =>
+      val info = TargetInfo.mappings(target)
+      val path = s"${paths.target}/${info.libname}"
+      context.put(info.value, path)
+    }
 
     // Other settings
     context.put(clc.Settings.INSTANCE, "manual-json")

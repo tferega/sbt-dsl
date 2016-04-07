@@ -12,7 +12,7 @@ object SbtDslPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    dslApply := core.DslApplicator(dslTargets.value),
+    dslApply := core.compileDsl(),
     dslTargets := Nil
   )
 }

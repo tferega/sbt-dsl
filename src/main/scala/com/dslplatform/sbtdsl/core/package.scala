@@ -1,11 +1,9 @@
-package com.dslplatform.sbtdsl.core
+package com.dslplatform.sbtdsl
 
 import com.dslplatform.compiler.client
 
-object DslApplicator {
-  def apply(targets: Seq[Params.Target]): Unit = {
-    val module = "storage"
-
+package object core {
+  def compileDsl(): Unit = {
     val context = new client.Context()
     context.put(client.parameters.Download.INSTANCE, null)
     context.put(client.parameters.DslPath.INSTANCE, "model/dsl")

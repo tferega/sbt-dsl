@@ -6,4 +6,4 @@ sbtPlugin := true
 
 unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value)
 
-libraryDependencies += "com.dslplatform" % "dsl-clc" % "1.6.0"
+libraryDependencies += "com.dslplatform" % "dsl-clc" % "1.6.1"

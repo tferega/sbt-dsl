@@ -6,13 +6,16 @@ import com.dslplatform.compiler.client.{ parameters => clc }
 package object core {
   import Options._
 
-  def compileDsl(targets: Seq[Target], paths: Utils.Paths): Unit = {
+  def compileDsl(
+      dbParams: Utils.DbParams,
+      targets: Seq[Target],
+      paths: Utils.Paths): Unit = {
     val context = new ClcContext()
 
     // Basic settings
     context.put(clc.Download.INSTANCE, null)
     context.put(clc.Namespace.INSTANCE, "org.example")
-    context.put(clc.PostgresConnection.INSTANCE, "localhost:5432/storage_db?user=storage_user&password=storage_pass")
+    context.put(clc.PostgresConnection.INSTANCE, s"${dbParams.location.host}:${dbParams.location.port}/${dbParams.name}?user=${dbParams.credentials.user}&password=${dbParams.credentials.pass}")
 
     // Target settings
     targets foreach { target =>

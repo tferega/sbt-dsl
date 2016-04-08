@@ -6,7 +6,7 @@ import com.dslplatform.compiler.client.{ parameters => clc }
 package object core {
   import Options._
 
-  def compileDsl(targets: Seq[Target], paths: Options.Paths): Unit = {
+  def compileDsl(targets: Seq[Target], paths: Utils.Paths): Unit = {
     val context = new ClcContext()
 
     // Basic settings

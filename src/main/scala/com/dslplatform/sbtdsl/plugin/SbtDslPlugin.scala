@@ -1,6 +1,7 @@
 package com.dslplatform.sbtdsl
 package plugin
 
+import core.Utils
 import sbt._
 
 object SbtDslPlugin extends AutoPlugin {
@@ -20,7 +21,7 @@ object SbtDslPlugin extends AutoPlugin {
   override lazy val projectSettings = Seq(
     dslApply := core.compileDsl(
       targets = dslTargets.value,
-      paths = Options.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)),
+      paths = Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)),
 
     dslTargets := Nil,
     dslTargetPath := "lib",

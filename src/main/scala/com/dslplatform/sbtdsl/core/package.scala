@@ -8,35 +8,13 @@ import java.sql.{ Connection, DriverManager, ResultSet }
 package object core {
   import Options._
 
-  def compileDsl(
-      db: Utils.DbParams,
+  def initAndCompileDsl(
+      scm: Options.Scm,
       targets: Seq[Target],
+      db: Utils.DbParams,
       paths: Utils.Paths): Unit = {
-    val context = new ClcContext()
-
-    // Basic settings
-    context.put(clc.Download.INSTANCE, null)
-    context.put(clc.Namespace.INSTANCE, "org.example")
-    context.put(clc.PostgresConnection.INSTANCE, s"${db.location.host}:${db.location.port}/${db.name}?user=${db.credentials.user}&password=${db.credentials.pass}")
-
-    // Target settings
-    targets foreach { target =>
-      val info = TargetInfo.mappings(target)
-      val path = s"${paths.target}/${info.libname}"
-      context.put(info.value, path)
-    }
-
-    // Other settings
-    context.put(clc.Settings.INSTANCE, "manual-json")
-
-    // Paths and locations
-    context.put(clc.DslPath.INSTANCE, paths.dsl)
-    context.put(clc.Dependencies.INSTANCE, paths.lib)
-    context.put(clc.SqlPath.INSTANCE, paths.sql)
-
-    context.put(clc.ApplyMigration.INSTANCE, null)
-    val params = ClcMain.initializeParameters(context, ".")
-    ClcMain.processContext(context, params)
+    initDsl(scm, db, paths)
+    compileDsl(targets, db, paths)
   }
 
   def initDsl(
@@ -98,6 +76,37 @@ package object core {
     } finally {
       connection.close()
     }
+  }
+
+  def compileDsl(
+      targets: Seq[Target],
+      db: Utils.DbParams,
+      paths: Utils.Paths): Unit = {
+    val context = new ClcContext()
+
+    // Basic settings
+    context.put(clc.Download.INSTANCE, null)
+    context.put(clc.Namespace.INSTANCE, "org.example")
+    context.put(clc.PostgresConnection.INSTANCE, s"${db.location.host}:${db.location.port}/${db.name}?user=${db.credentials.user}&password=${db.credentials.pass}")
+
+    // Target settings
+    targets foreach { target =>
+      val info = TargetInfo.mappings(target)
+      val path = s"${paths.target}/${info.libname}"
+      context.put(info.value, path)
+    }
+
+    // Other settings
+    context.put(clc.Settings.INSTANCE, "manual-json")
+
+    // Paths and locations
+    context.put(clc.DslPath.INSTANCE, paths.dsl)
+    context.put(clc.Dependencies.INSTANCE, paths.lib)
+    context.put(clc.SqlPath.INSTANCE, paths.sql)
+
+    context.put(clc.ApplyMigration.INSTANCE, null)
+    val params = ClcMain.initializeParameters(context, ".")
+    ClcMain.processContext(context, params)
   }
 
   private def dbConnect(user: String): Connection = {

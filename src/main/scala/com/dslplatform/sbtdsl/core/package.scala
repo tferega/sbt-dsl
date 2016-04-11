@@ -40,8 +40,8 @@ package object core {
       }
 
       // Check that the database model has not be already created.
-      if (dbDatabaseExists(connection, Templates.DbName) || dbRoleExists(connection, Templates.UserName)) {
-        throw new IllegalStateException(s"Database user or model '${Templates.ModuleName}' already initialized (${Templates.UserName} / ${Templates.DbName})")
+      if (dbDatabaseExists(connection, db.name) || dbRoleExists(connection, db.credentials.user)) {
+        throw new IllegalStateException(s"Database user or model already initialized (${db.credentials.user} / ${db.name})")
       }
 
       try {
@@ -60,16 +60,16 @@ package object core {
         }
 
         // Create files needed to compile the model.
-        writeToFile(Templates.ExampleModule, paths.dsl, "model.dsl")
-        writeToFile(Templates.SqlScriptDrop, paths.sql, "00-drop-database.sql")
-        writeToFile(Templates.SqlScriptCreate, paths.sql, "10-create-database.sql")
+        writeToFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
+        writeToFile(Templates.SqlScriptDrop(db.name, db.credentials.user), paths.sql, "00-drop-database.sql")
+        writeToFile(Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass), paths.sql, "10-create-database.sql")
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating directory structure: ${e.getMessage}", e)
       }
 
       try {
         // Create the database user and model.
-        dbExecute(connection, Templates.SqlScriptCreate)
+        dbExecute(connection, Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass))
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating the database model: ${e.getMessage}", e)
       }
@@ -92,7 +92,7 @@ package object core {
     // Target settings
     targets foreach { target =>
       val info = TargetInfo.mappings(target)
-      val path = s"${paths.target}/${info.libname}"
+      val path = s"${paths.target}/${db.module}-${info.libname}"
       context.put(info.value, path)
     }
 

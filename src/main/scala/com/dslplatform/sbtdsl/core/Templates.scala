@@ -1,17 +1,12 @@
 package com.dslplatform.sbtdsl.core
 
 object Templates {
-  val ModuleName = "test"
-  val DbName = "test_db"
-  val UserName = "test_user"
-  val UserPass = "test_pass"
-
   val TargetGitignore =
     """*.jar
       |""".stripMargin
 
-  val ExampleModule =
-    s"""module $ModuleName {
+  def ExampleModule(name: String) =
+    s"""module $name {
        |  aggregate Book {
        |    String name;
        |    Int pageCount;
@@ -24,22 +19,22 @@ object Templates {
       |java_pojo
       |""".stripMargin
 
-  val SqlScriptDrop =
+  def SqlScriptDrop(db: String, user: String) =
     s"""-- Terminate all database connections
-       |SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DbName';
+       |SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$db';
        |
        |-- Drop database
-       |DROP DATABASE "$DbName";
+       |DROP DATABASE "$db";
        |
        |-- Drop owner
-       |DROP ROLE "$UserName";
+       |DROP ROLE "$user";
        |""".stripMargin
 
-  val SqlScriptCreate =
+  def SqlScriptCreate(db: String, user: String, pass: String) =
     s"""-- Create database owner
-       |CREATE ROLE "$UserName" PASSWORD '$UserPass' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN;
+       |CREATE ROLE "$user" PASSWORD '$pass' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN;
        |
        |-- Create database
-       |CREATE DATABASE "$DbName" OWNER "$UserName" ENCODING 'utf8' TEMPLATE "template1";
+       |CREATE DATABASE "$db" OWNER "$user" ENCODING 'utf8' TEMPLATE "template1";
        |""".stripMargin
 }

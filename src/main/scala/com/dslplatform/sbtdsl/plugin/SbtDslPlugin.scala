@@ -11,6 +11,7 @@ object SbtDslPlugin extends AutoPlugin {
     val dslInit = TaskKey[Unit]("dsl-init", "Initializes the DSL project, doing everything needed to start using it")
     val dslCompile = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
 
+    val dslModule = SettingKey[String]("dsl-module", "Name of the test DSL module created by dslInit, also modifies other dslDb values")
     val dslScm = SettingKey[Options.Scm]("dsl-scm", "Defines which SCM to use when generating directory structure")
     val dslTargets = SettingKey[Seq[Options.Target]]("dsl-targets", "Convert DSL to specified target (Java client, PHP, Revenj server, ...)")
 
@@ -35,16 +36,17 @@ object SbtDslPlugin extends AutoPlugin {
     dslScm := Options.Scm.Git,
     dslTargets := Nil,
 
+    dslModule := "library_test",
     dslDbLocation := Options.DbLocation("localhost", 5432),
-    dslDbName := "test_db",
-    dslDbCredentials := Options.DbCredentials("test_user", "test_pass"),
+    dslDbName := s"${dslModule.value}_db",
+    dslDbCredentials := Options.DbCredentials(s"${dslModule.value}_user", s"${dslModule.value}_pass"),
 
     dslTargetPath := "lib",
     dslDslPath := "model/dsl",
     dslLibPath := "model/lib",
     dslSqlPath := "model/sql",
 
-    dslCalculatedDb := Utils.DbParams(dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
+    dslCalculatedDb := Utils.DbParams(dslModule.value, dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
     dslCalculatedPaths := Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)
   )
 }

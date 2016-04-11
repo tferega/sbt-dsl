@@ -8,9 +8,10 @@ object SbtDslPlugin extends AutoPlugin {
   object autoImport {
     val Options = core.Options
 
+    val dslInit = TaskKey[Unit]("dsl-init", "Initializes the DSL project, doing everything needed to start using it")
     val dslApply = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
 
-    val dslModuleName = SettingKey[String]("dsl-module-name", "String used to fill default values for some other settings")
+    val dslScm = SettingKey[Options.Scm]("dsl-scm", "Defines which SCM to use when generating directory structure")
     val dslTargets = SettingKey[Seq[Options.Target]]("dsl-targets", "Convert DSL to specified target (Java client, PHP, Revenj server, ...)")
 
     val dslDbLocation = SettingKey[Options.DbLocation]("dsl-db-location", "Database host and port connection parameters")
@@ -25,17 +26,20 @@ object SbtDslPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings = Seq(
+    dslInit := core.initDsl(
+      scm = dslScm.value,
+      paths = Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)),
     dslApply := core.compileDsl(
       dbParams = Utils.DbParams(dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
       targets = dslTargets.value,
       paths = Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)),
 
-    dslModuleName := "TestModule",
+    dslScm := Options.Scm.Git,
     dslTargets := Nil,
 
     dslDbLocation := Options.DbLocation("localhost", 5432),
-    dslDbName := s"${dslModuleName.value}_db",
-    dslDbCredentials := Options.DbCredentials(s"${dslModuleName.value}_user", s"${dslModuleName.value}_pass"),
+    dslDbName := "test_db",
+    dslDbCredentials := Options.DbCredentials("test_user", "test_pass"),
 
     dslTargetPath := "lib",
     dslDslPath := "model/dsl",

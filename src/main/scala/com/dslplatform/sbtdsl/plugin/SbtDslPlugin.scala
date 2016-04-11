@@ -28,9 +28,10 @@ object SbtDslPlugin extends AutoPlugin {
   override lazy val projectSettings = Seq(
     dslInit := core.initDsl(
       scm = dslScm.value,
+      db = Utils.DbParams(dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
       paths = Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)),
     dslApply := core.compileDsl(
-      dbParams = Utils.DbParams(dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
+      db = Utils.DbParams(dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
       targets = dslTargets.value,
       paths = Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)),
 

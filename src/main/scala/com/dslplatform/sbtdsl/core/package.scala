@@ -3,12 +3,13 @@ package com.dslplatform.sbtdsl
 import com.dslplatform.compiler.client.{ Context => ClcContext, Main => ClcMain }
 import com.dslplatform.compiler.client.{ parameters => clc }
 import java.nio.file.{ Files, Path, Paths }
+import java.sql.{ Connection, DriverManager, ResultSet }
 
 package object core {
   import Options._
 
   def compileDsl(
-      dbParams: Utils.DbParams,
+      db: Utils.DbParams,
       targets: Seq[Target],
       paths: Utils.Paths): Unit = {
     val context = new ClcContext()
@@ -16,7 +17,7 @@ package object core {
     // Basic settings
     context.put(clc.Download.INSTANCE, null)
     context.put(clc.Namespace.INSTANCE, "org.example")
-    context.put(clc.PostgresConnection.INSTANCE, s"${dbParams.location.host}:${dbParams.location.port}/${dbParams.name}?user=${dbParams.credentials.user}&password=${dbParams.credentials.pass}")
+    context.put(clc.PostgresConnection.INSTANCE, s"${db.location.host}:${db.location.port}/${db.name}?user=${db.credentials.user}&password=${db.credentials.pass}")
 
     // Target settings
     targets foreach { target =>
@@ -40,42 +41,114 @@ package object core {
 
   def initDsl(
       scm: Options.Scm,
-    paths: Utils.Paths): Unit = {
-    // Check that dsl paths are not invalid, and that they do not already exist.
-    val existingFolders = checkFolders(
-      ("dslTargetPath", paths.target),
-      ("dslDslPath", paths.dsl),
-      ("dslLibPath", paths.lib),
-      ("dslSqlPath", paths.sql))
-    if (existingFolders.nonEmpty) {
-      val folderReport = existingFolders mkString ", "
-      throw new IllegalStateException(s"Project directory structure already initialized: $folderReport")
-    }
+      db: Utils.DbParams,
+      paths: Utils.Paths): Unit = {
+    // Make sure that postgres driver is registered.
+    Class.forName("org.postgresql.Driver")
+
+    // Initialize database connection.
+    val connection = dbConnect("postgres")
 
     try {
-      // Create the directory structure.
-      createPath(paths.target)
-      createPath(paths.dsl)
-      createPath(paths.lib)
-      createPath(paths.sql)
-
-      // Create SCM ignore files.
-      scm match {
-        case Scm.Git =>
-          writeToFile(Templates.TargetGitignore, paths.target, ".gitignore")
-          writeToFile(Templates.LibGitignore, paths.lib, ".gitignore")
-        case _ =>
+      // Check that dsl paths are not invalid, and that they do not already exist.
+      val existingFolders = checkFolders(
+        ("dslTargetPath", paths.target),
+        ("dslDslPath", paths.dsl),
+        ("dslLibPath", paths.lib),
+        ("dslSqlPath", paths.sql))
+      if (existingFolders.nonEmpty) {
+        val folderReport = existingFolders mkString ", "
+        throw new IllegalStateException(s"Project directory structure already initialized: $folderReport")
       }
 
-      // Create files needed to compile the model.
-      writeToFile(Templates.ExampleModule, paths.dsl, "model.dsl")
-      writeToFile(Templates.SqlScriptDrop, paths.sql, "00-drop-database.sql")
-      writeToFile(Templates.SqlScriptCreate, paths.sql, "10-create-database.sql")
+      // Check that the database model has not be already created.
+      if (dbDatabaseExists(connection, Templates.DbName) || dbRoleExists(connection, Templates.UserName)) {
+        throw new IllegalStateException(s"Database user or model '${Templates.ModuleName}' already initialized (${Templates.UserName} / ${Templates.DbName})")
+      }
 
-      // Initialize the database
-      // TODO
+      try {
+        // Create the directory structure.
+        createPath(paths.target)
+        createPath(paths.dsl)
+        createPath(paths.lib)
+        createPath(paths.sql)
+
+        // Create SCM ignore files.
+        scm match {
+          case Scm.Git =>
+            writeToFile(Templates.TargetGitignore, paths.target, ".gitignore")
+            writeToFile(Templates.LibGitignore, paths.lib, ".gitignore")
+          case _ =>
+        }
+
+        // Create files needed to compile the model.
+        writeToFile(Templates.ExampleModule, paths.dsl, "model.dsl")
+        writeToFile(Templates.SqlScriptDrop, paths.sql, "00-drop-database.sql")
+        writeToFile(Templates.SqlScriptCreate, paths.sql, "10-create-database.sql")
+      } catch {
+        case e: Exception => throw new RuntimeException(s"An error occurred while creating directory structure: ${e.getMessage}", e)
+      }
+
+      try {
+        // Create the database user and model.
+        dbExecute(connection, Templates.SqlScriptCreate)
+      } catch {
+        case e: Exception => throw new RuntimeException(s"An error occurred while creating the database model: ${e.getMessage}", e)
+      }
+    } finally {
+      connection.close()
+    }
+  }
+
+  private def dbConnect(user: String): Connection = {
+    val pass = readln(s"Enter password for user $user")
+    val connectionString = s"jdbc:postgresql://localhost:5432/?user=$user&password=$pass"
+    try {
+      DriverManager.getConnection(connectionString)
     } catch {
-      case e: Exception => throw new RuntimeException(s"An error occurred while creating directory structure: ${e.getMessage}")
+      case e: Exception => throw new IllegalStateException(s"Could not establish connection with the database at $connectionString (${e.getMessage})", e)
+    }
+  }
+
+  private def dbDatabaseExists(connection: Connection, name: String): Boolean = {
+    val query = s"SELECT count(datname) AS count FROM pg_catalog.pg_database WHERE datname='$name'"
+    val r = dbExecuteAndParse(connection, query, rs => rs.getInt("count") == 1)
+    r.getOrElse(false)
+  }
+
+  private def dbRoleExists(connection: Connection, name: String): Boolean = {
+    val query = s"SELECT count(rolname) AS count FROM pg_catalog.pg_roles WHERE rolname='$name'"
+    val r = dbExecuteAndParse(connection, query, rs => rs.getInt("count") == 1)
+    r.getOrElse(false)
+  }
+
+  private def dbExecuteAndParse[T](
+      connection: Connection,
+      query: String,
+      rsParser: ResultSet => T): Option[T] = {
+    val statement = connection.createStatement
+    try {
+      val rs = statement.executeQuery(query)
+      try {
+        if (rs.next) {
+          Some(rsParser(rs))
+        } else {
+          None
+        }
+      } finally {
+        rs.close()
+      }
+    } finally {
+      statement.close()
+    }
+  }
+
+  private def dbExecute(connection: Connection, query: String): Unit = {
+    val statement = connection.createStatement
+    try {
+      statement.executeUpdate(query)
+    } finally {
+      statement.close()
     }
   }
 
@@ -95,6 +168,14 @@ package object core {
     try {
       (namedPath._1, Paths.get(namedPath._2).toAbsolutePath)
     } catch {
-      case e: Exception => throw new IllegalArgumentException(s"""Path ${namedPath._1} is invalid: "${namedPath._2}"""")
+      case e: Exception => throw new IllegalArgumentException(s"""Path ${namedPath._1} is invalid: "${namedPath._2}"""", e)
     }
+
+  private def readln(prompt: String): String = {
+    print(s"$prompt: ")
+    System.out.flush()
+    val line = readLine()
+    println
+    line
+  }
 }

@@ -9,12 +9,13 @@ package object core {
   import Options._
 
   def initAndCompileDsl(
+      namespace: String,
       scm: Options.Scm,
       targets: Seq[Target],
       db: Utils.DbParams,
       paths: Utils.Paths): Unit = {
     initDsl(scm, db, paths)
-    compileDsl(targets, db, paths)
+    compileDsl(namespace, targets, db, paths)
   }
 
   def initDsl(
@@ -83,14 +84,16 @@ package object core {
   }
 
   def compileDsl(
+      namespace: String,
       targets: Seq[Target],
       db: Utils.DbParams,
       paths: Utils.Paths): Unit = {
     val context = new ClcContext()
 
     // Basic settings
+    context.put(clc.ApplyMigration.INSTANCE, null)
     context.put(clc.Download.INSTANCE, null)
-    context.put(clc.Namespace.INSTANCE, "org.example")
+    context.put(clc.Namespace.INSTANCE, namespace)
     context.put(clc.PostgresConnection.INSTANCE, s"${db.location.host}:${db.location.port}/${db.name}?user=${db.credentials.user}&password=${db.credentials.pass}")
 
     // Target settings
@@ -108,7 +111,6 @@ package object core {
     context.put(clc.Dependencies.INSTANCE, paths.lib)
     context.put(clc.SqlPath.INSTANCE, paths.sql)
 
-    context.put(clc.ApplyMigration.INSTANCE, null)
     val params = ClcMain.initializeParameters(context, ".")
     ClcMain.processContext(context, params)
   }

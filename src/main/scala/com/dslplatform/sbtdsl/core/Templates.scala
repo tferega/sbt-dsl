@@ -37,4 +37,18 @@ object Templates {
        |-- Create database
        |CREATE DATABASE "$db" OWNER "$user" ENCODING 'utf8' TEMPLATE "template1";
        |""".stripMargin
+
+  def ScalaExample(module: String) =
+    s"""import org.example.$module.Book
+       |
+       |object Example extends App {
+       |  println("An example of DSL Platform usage")
+       |
+       |  println("Creating a new Book...")
+       |  val book = new Book("A very interesting book title", 300)
+       |
+       |  println("Persisting the created book...")
+       |  // TODO
+       |}
+       |""".stripMargin
 }

@@ -45,11 +45,14 @@ package object core {
       }
 
       try {
+        val scalaExamplePath = Paths.get(paths.sources, "main", "scala").toFile.getPath
+
         // Create the directory structure.
         createPath(paths.target)
         createPath(paths.dsl)
         createPath(paths.lib)
         createPath(paths.sql)
+        createPath(scalaExamplePath)
 
         // Create SCM ignore files.
         scm match {
@@ -63,6 +66,7 @@ package object core {
         writeToFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
         writeToFile(Templates.SqlScriptDrop(db.name, db.credentials.user), paths.sql, "00-drop-database.sql")
         writeToFile(Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass), paths.sql, "10-create-database.sql")
+        writeToFile(Templates.ScalaExample(db.module), scalaExamplePath, "Example.scala")
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating directory structure: ${e.getMessage}", e)
       }
@@ -110,7 +114,7 @@ package object core {
   }
 
   private def dbConnect(user: String): Connection = {
-    val pass = readln(s"Enter password for user $user")
+    val pass = readln(s"Enter password for role $user")
     val connectionString = s"jdbc:postgresql://localhost:5432/?user=$user&password=$pass"
     try {
       DriverManager.getConnection(connectionString)

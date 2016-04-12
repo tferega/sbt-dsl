@@ -3,6 +3,7 @@ package plugin
 
 import core.Utils
 import sbt._
+import Keys._
 
 object SbtDslPlugin extends AutoPlugin {
   object autoImport {
@@ -36,7 +37,7 @@ object SbtDslPlugin extends AutoPlugin {
     dslScm := Options.Scm.Git,
     dslTargets := Nil,
 
-    dslModule := "library_test",
+    dslModule := "library",
     dslDbLocation := Options.DbLocation("localhost", 5432),
     dslDbName := s"${dslModule.value}_db",
     dslDbCredentials := Options.DbCredentials(s"${dslModule.value}_user", s"${dslModule.value}_pass"),
@@ -47,6 +48,6 @@ object SbtDslPlugin extends AutoPlugin {
     dslSqlPath := "model/sql",
 
     dslCalculatedDb := Utils.DbParams(dslModule.value, dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
-    dslCalculatedPaths := Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value)
+    dslCalculatedPaths := Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value, sourceDirectory.value.getPath)
   )
 }

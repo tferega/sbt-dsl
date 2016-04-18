@@ -26,8 +26,8 @@ object SbtDslPlugin extends AutoPlugin {
     val dslLibPath = SettingKey[String]("dsl-lib-path", "Specifies location of libraries needed to compile the model")
     val dslSqlPath = SettingKey[String]("dsl-sql-path", "Specifies location of generated SQL scripts")
 
-    lazy val dslCalculatedDb = SettingKey[Utils.DbParams]("dsl-calculated-db", "")
-    lazy val dslCalculatedPaths = SettingKey[Utils.Paths]("dsl-calculated-paths", "")
+    val dslCalculatedDb = SettingKey[Utils.DbParams]("dsl-calculated-db", "A Utils.DbParams value calculated from: dslModule, dslDbLocation, dslDbName and dslDbCredentials")
+    val dslCalculatedPaths = SettingKey[Utils.Paths]("dsl-calculated-paths", "A Utils.Paths value calculated from: dslTargetPath, dslDslPath, dslLibPath, dslSqlPath and sourceDirectory")
   }
   import autoImport._
 

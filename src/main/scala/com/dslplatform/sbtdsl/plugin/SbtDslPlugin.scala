@@ -10,7 +10,7 @@ object SbtDslPlugin extends AutoPlugin {
     val Options = core.Options
 
     val dslInit = TaskKey[Unit]("dsl-init", "Initializes the DSL project, doing everything needed to start using it")
-    val dslCompile = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
+    val dslApply = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
 
     val dslModule = SettingKey[String]("dsl-module", "Name of the test DSL module created by dslInit, also modifies other dslDb values")
     val dslNamespace = SettingKey[String]("dsl-namespace", "Specifies root namespace for target language (supported by some languages)")
@@ -32,8 +32,8 @@ object SbtDslPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    dslInit := core.initAndCompileDsl(dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslCalculatedPaths.value),
-    dslCompile := core.compileDsl(dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslCalculatedPaths.value),
+    dslInit := core.initAndApplyDsl(dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslCalculatedPaths.value),
+    dslApply := core.applyDsl(dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslCalculatedPaths.value),
 
     dslScm := Options.Scm.Git,
     dslTargets := Nil,

@@ -8,14 +8,14 @@ import java.sql.{ Connection, DriverManager, ResultSet }
 package object core {
   import Options._
 
-  def initAndCompileDsl(
+  def initAndApplyDsl(
       namespace: String,
       scm: Options.Scm,
       targets: Seq[Target],
       db: Utils.DbParams,
       paths: Utils.Paths): Unit = {
     initDsl(scm, db, paths)
-    compileDsl(namespace, targets, db, paths)
+    applyDsl(namespace, targets, db, paths)
   }
 
   def initDsl(
@@ -83,7 +83,7 @@ package object core {
     }
   }
 
-  def compileDsl(
+  def applyDsl(
       namespace: String,
       targets: Seq[Target],
       db: Utils.DbParams,

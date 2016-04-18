@@ -20,6 +20,7 @@ object SbtDslPlugin extends AutoPlugin {
     val dslDbLocation = SettingKey[Options.DbLocation]("dsl-db-location", "Database host and port connection parameters")
     val dslDbName = SettingKey[String]("dsl-db-name", "Database name to connect to")
     val dslDbCredentials = SettingKey[Options.DbCredentials]("dsl-db-credentials", "Username and password to use for database connection")
+    val dslSettings = SettingKey[Seq[Options.Settings]]("dsl-settings", "Additional DSL settings")
 
     val dslTargetPath = SettingKey[String]("dsl-target-path", "Specifies the location of generated artifacts")
     val dslDslPath = SettingKey[String]("dsl-dsl-path", "Specifies location of DSL models folder")
@@ -32,8 +33,8 @@ object SbtDslPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    dslInit := core.initAndApplyDsl(dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslCalculatedPaths.value),
-    dslApply := core.applyDsl(dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslCalculatedPaths.value),
+    dslInit := core.initAndApplyDsl(dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
+    dslApply := core.applyDsl(dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
 
     dslScm := Options.Scm.Git,
     dslTargets := Nil,
@@ -43,6 +44,7 @@ object SbtDslPlugin extends AutoPlugin {
     dslDbLocation := Options.DbLocation("localhost", 5432),
     dslDbName := s"${dslModule.value}_db",
     dslDbCredentials := Options.DbCredentials(s"${dslModule.value}_user", s"${dslModule.value}_pass"),
+    dslSettings := Seq(Options.Settings.ManualJson),
 
     dslTargetPath := "lib",
     dslDslPath := "model/dsl",

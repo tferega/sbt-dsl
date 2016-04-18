@@ -13,9 +13,10 @@ package object core {
       scm: Options.Scm,
       targets: Seq[Target],
       db: Utils.DbParams,
+      settings: Seq[Options.Settings],
       paths: Utils.Paths): Unit = {
     initDsl(scm, db, paths)
-    applyDsl(namespace, targets, db, paths)
+    applyDsl(namespace, targets, db, settings, paths)
   }
 
   def initDsl(
@@ -87,6 +88,7 @@ package object core {
       namespace: String,
       targets: Seq[Target],
       db: Utils.DbParams,
+      settings: Seq[Options.Settings],
       paths: Utils.Paths): Unit = {
     val context = new ClcContext()
 
@@ -98,13 +100,16 @@ package object core {
 
     // Target settings
     targets foreach { target =>
-      val info = TargetInfo.mappings(target)
+      val info = Mappings.target(target)
       val path = s"${paths.target}/${db.module}-${info.libname}"
       context.put(info.value, path)
     }
 
     // Other settings
-    context.put(clc.Settings.INSTANCE, "manual-json")
+    settings foreach { setting =>
+      val value = Mappings.settings(setting)
+      context.put(clc.Settings.INSTANCE, value)
+    }
 
     // Paths and locations
     context.put(clc.DslPath.INSTANCE, paths.dsl)

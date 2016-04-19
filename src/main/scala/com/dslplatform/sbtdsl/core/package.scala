@@ -27,9 +27,7 @@ package object core {
     Class.forName("org.postgresql.Driver")
 
     // Initialize database connection.
-    val connection = dbConnect("postgres")
-
-    try {
+    using(dbConnect("postgres")) { connection =>
       // Check that dsl paths are not invalid, and that they do not already exist.
       val existingFolders = checkFolders(
         ("dslTargetPath", paths.target),
@@ -79,8 +77,6 @@ package object core {
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating the database model: ${e.getMessage}", e)
       }
-    } finally {
-      connection.close()
     }
   }
 
@@ -146,31 +142,19 @@ package object core {
       connection: Connection,
       query: String,
       rsParser: ResultSet => T): Option[T] = {
-    val statement = connection.createStatement
-    try {
-      val rs = statement.executeQuery(query)
-      try {
+    using(connection.createStatement) { statement =>
+      using(statement.executeQuery(query)) { rs =>
         if (rs.next) {
           Some(rsParser(rs))
         } else {
           None
         }
-      } finally {
-        rs.close()
       }
-    } finally {
-      statement.close()
     }
   }
 
-  private def dbExecute(connection: Connection, query: String): Unit = {
-    val statement = connection.createStatement
-    try {
-      statement.executeUpdate(query)
-    } finally {
-      statement.close()
-    }
-  }
+  private def dbExecute(connection: Connection, query: String): Unit =
+    using(connection.createStatement)(_.executeUpdate(query))
 
   private def checkFolders(namedPaths: (String, String)*): Seq[String] =
     namedPaths
@@ -198,4 +182,11 @@ package object core {
     println
     line
   }
+
+  private def using[C <: AutoCloseable, R](closeable: C)(f: C => R): R =
+    try {
+      f(closeable)
+    } finally {
+      closeable.close()
+    }
 }

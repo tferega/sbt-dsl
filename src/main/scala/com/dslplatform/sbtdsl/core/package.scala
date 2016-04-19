@@ -12,17 +12,17 @@ package object core {
       namespace: String,
       scm: Options.Scm,
       targets: Seq[Target],
-      db: Utils.DbParams,
+      db: DbParams,
       settings: Seq[Options.Settings],
-      paths: Utils.Paths): Unit = {
+      paths: PathParams): Unit = {
     initDsl(scm, db, paths)
     applyDsl(namespace, targets, db, settings, paths)
   }
 
   def initDsl(
       scm: Options.Scm,
-      db: Utils.DbParams,
-      paths: Utils.Paths): Unit = {
+      db: DbParams,
+      paths: PathParams): Unit = {
     // Make sure that postgres driver is registered.
     Class.forName("org.postgresql.Driver")
 
@@ -83,9 +83,9 @@ package object core {
   def applyDsl(
       namespace: String,
       targets: Seq[Target],
-      db: Utils.DbParams,
+      db: DbParams,
       settings: Seq[Options.Settings],
-      paths: Utils.Paths): Unit = {
+      paths: PathParams): Unit = {
     val context = new ClcContext()
 
     // Basic settings

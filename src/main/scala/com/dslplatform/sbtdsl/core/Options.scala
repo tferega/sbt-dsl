@@ -2,6 +2,9 @@ package com.dslplatform.sbtdsl
 package core
 
 trait Options {
+  case class DbParams(module: String, location: Options.DbLocation, name: String, credentials: Options.DbCredentials)
+  case class PathParams(target: String, dsl: String, lib: String, sql: String, sources: String)
+
   case class DbLocation(host: String, port: Int)
   case class DbCredentials(user: String, pass: String)
 

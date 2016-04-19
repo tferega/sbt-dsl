@@ -1,7 +1,6 @@
 package com.dslplatform.sbtdsl
 package plugin
 
-import core.Utils
 import sbt._
 import Keys._
 
@@ -27,8 +26,8 @@ object SbtDslPlugin extends AutoPlugin {
     val dslLibPath = SettingKey[String]("dsl-lib-path", "Specifies location of libraries needed to compile the model")
     val dslSqlPath = SettingKey[String]("dsl-sql-path", "Specifies location of generated SQL scripts")
 
-    val dslCalculatedDb = SettingKey[Utils.DbParams]("dsl-calculated-db", "A Utils.DbParams value calculated from: dslModule, dslDbLocation, dslDbName and dslDbCredentials")
-    val dslCalculatedPaths = SettingKey[Utils.Paths]("dsl-calculated-paths", "A Utils.Paths value calculated from: dslTargetPath, dslDslPath, dslLibPath, dslSqlPath and sourceDirectory")
+    val dslCalculatedDb = SettingKey[Options.DbParams]("dsl-calculated-db", "A Utils.DbParams value calculated from: dslModule, dslDbLocation, dslDbName and dslDbCredentials")
+    val dslCalculatedPaths = SettingKey[Options.PathParams]("dsl-calculated-paths", "A Utils.Paths value calculated from: dslTargetPath, dslDslPath, dslLibPath, dslSqlPath and sourceDirectory")
   }
   import autoImport._
 
@@ -51,7 +50,7 @@ object SbtDslPlugin extends AutoPlugin {
     dslLibPath := "model/lib",
     dslSqlPath := "model/sql",
 
-    dslCalculatedDb := Utils.DbParams(dslModule.value, dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
-    dslCalculatedPaths := Utils.Paths(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value, sourceDirectory.value.getPath)
+    dslCalculatedDb := Options.DbParams(dslModule.value, dslDbLocation.value, dslDbName.value, dslDbCredentials.value),
+    dslCalculatedPaths := Options.PathParams(dslTargetPath.value, dslDslPath.value, dslLibPath.value, dslSqlPath.value, sourceDirectory.value.getPath)
   )
 }

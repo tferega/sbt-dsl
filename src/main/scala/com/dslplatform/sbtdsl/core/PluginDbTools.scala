@@ -1,5 +1,7 @@
 package com.dslplatform.sbtdsl.core
 
+import Utils._
+
 import java.sql.{ Connection, DriverManager, ResultSet }
 
 trait PluginDbTools {

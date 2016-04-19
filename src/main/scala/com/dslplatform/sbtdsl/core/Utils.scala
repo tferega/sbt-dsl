@@ -1,6 +1,6 @@
-package com.dslplatform.sbtdsl
+package com.dslplatform.sbtdsl.core
 
-package object core {
+object Utils {
   def readln(prompt: String): String = {
     print(s"$prompt: ")
     System.out.flush()

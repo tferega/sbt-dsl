@@ -1,6 +1,7 @@
 package com.dslplatform.sbtdsl.core
 
 import Options._
+import Utils._
 
 import com.dslplatform.compiler.client.{ Context => ClcContext, Main => ClcMain }
 import com.dslplatform.compiler.client.{ parameters => clc }

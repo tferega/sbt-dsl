@@ -1,4 +1,5 @@
-package com.dslplatform.sbtdsl.core
+package com.dslplatform.sbtdsl
+package core
 
 private object Templates {
   val TargetGitignore =

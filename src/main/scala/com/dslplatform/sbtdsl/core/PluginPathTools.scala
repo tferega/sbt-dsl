@@ -3,7 +3,7 @@ package com.dslplatform.sbtdsl.core
 import java.nio.file.{ Files, Paths }
 
 trait PluginPathTools {
-  def checkFolders(namedPaths: (String, String)*): Unit =
+  def checkPaths(namedPaths: (String, String)*): Unit =
     namedPaths foreach { namedPath =>
       try {
         (namedPath._1, Paths.get(namedPath._2).toAbsolutePath)
@@ -22,7 +22,7 @@ trait PluginPathTools {
     }
   }
 
-  def writeToFile(str: String, path: String, filename: String): Boolean = {
+  def writeToPath(str: String, path: String, filename: String): Boolean = {
     val p = Paths.get(path, filename)
     if (Files.exists(p)) {
       false

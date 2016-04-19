@@ -36,7 +36,7 @@ object Plugin extends PluginDbTools with PluginPathTools {
     logger.debug("Initializing database connection...")
     using(dbConnect("postgres")) { connection =>
       logger.debug("Verifying DSL paths...")
-      checkFolders(
+      checkPaths(
         ("dslTargetPath", paths.target),
         ("dslDslPath", paths.dsl),
         ("dslLibPath", paths.lib),
@@ -44,7 +44,7 @@ object Plugin extends PluginDbTools with PluginPathTools {
 
       try {
         def newPath(path: String): Unit = if (createPath(path)) { logger.warn(s"Path $path already exists!") } else { logger.debug(s"Created path $path") }
-        def newFile(str: String, path: String, filename: String): Unit = if (writeToFile(str, path, filename)) { logger.warn(s"File $path already exists!") } else { logger.debug(s"Created file $path") }
+        def newFile(str: String, path: String, filename: String): Unit = if (writeToPath(str, path, filename)) { logger.warn(s"File $path already exists!") } else { logger.debug(s"Created file $path") }
         val scalaExamplePath = Paths.get(paths.sources, "main", "scala").toFile.getPath
 
         logger.debug("Creating the project directory structure...")

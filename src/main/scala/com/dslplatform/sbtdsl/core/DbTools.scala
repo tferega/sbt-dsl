@@ -28,7 +28,7 @@ trait DbTools {
   def dbExecuteAndParse[T](
       connection: Connection,
       query: String,
-      rsParser: ResultSet => T): Option[T] = {
+      rsParser: ResultSet => T): Option[T] =
     using(connection.createStatement) { statement =>
       using(statement.executeQuery(query)) { rs =>
         if (rs.next) {
@@ -38,7 +38,6 @@ trait DbTools {
         }
       }
     }
-  }
 
   def dbExecute(connection: Connection, query: String): Unit =
     using(connection.createStatement)(_.executeUpdate(query))

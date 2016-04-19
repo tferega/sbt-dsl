@@ -28,44 +28,37 @@ object Plugin extends DbTools with PathTools {
     // Initialize database connection.
     using(dbConnect("postgres")) { connection =>
       // Check that dsl paths are not invalid, and that they do not already exist.
-      val existingFolders = checkFolders(
+      checkFolders(
         ("dslTargetPath", paths.target),
         ("dslDslPath", paths.dsl),
         ("dslLibPath", paths.lib),
         ("dslSqlPath", paths.sql))
-      if (existingFolders.nonEmpty) {
-        val folderReport = existingFolders mkString ", "
-        throw new IllegalStateException(s"Project directory structure already initialized: $folderReport")
-      }
-
-      // Check that the database model has not be already created.
-      if (dbDatabaseExists(connection, db.name) || dbRoleExists(connection, db.credentials.user)) {
-        throw new IllegalStateException(s"Database user or model already initialized (${db.credentials.user} / ${db.name})")
-      }
 
       try {
+        def newPath(path: String): Unit = createPath(path)
+        def newFile(str: String, path: String, filename: String): Unit = writeToFile(str, path, filename)
         val scalaExamplePath = Paths.get(paths.sources, "main", "scala").toFile.getPath
 
         // Create the directory structure.
-        createPath(paths.target)
-        createPath(paths.dsl)
-        createPath(paths.lib)
-        createPath(paths.sql)
-        createPath(scalaExamplePath)
+        newPath(paths.target)
+        newPath(paths.dsl)
+        newPath(paths.lib)
+        newPath(paths.sql)
+        newPath(scalaExamplePath)
 
         // Create SCM ignore files.
         scm match {
           case Scm.Git =>
-            writeToFile(Templates.TargetGitignore, paths.target, ".gitignore")
-            writeToFile(Templates.LibGitignore, paths.lib, ".gitignore")
+            newFile(Templates.TargetGitignore, paths.target, ".gitignore")
+            newFile(Templates.LibGitignore, paths.lib, ".gitignore")
           case _ =>
         }
 
         // Create files needed to compile the model.
-        writeToFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
-        writeToFile(Templates.SqlScriptDrop(db.name, db.credentials.user), paths.sql, "00-drop-database.sql")
-        writeToFile(Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass), paths.sql, "10-create-database.sql")
-        writeToFile(Templates.ScalaExample(db.module), scalaExamplePath, "Example.scala")
+        newFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
+        newFile(Templates.SqlScriptDrop(db.name, db.credentials.user), paths.sql, "00-drop-database.sql")
+        newFile(Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass), paths.sql, "10-create-database.sql")
+        newFile(Templates.ScalaExample(db.module), scalaExamplePath, "Example.scala")
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating directory structure: ${e.getMessage}", e)
       }

@@ -2,7 +2,7 @@ package com.dslplatform.sbtdsl.core
 
 import java.sql.{ Connection, DriverManager, ResultSet }
 
-trait DbTools {
+trait PluginDbTools {
   def dbConnect(user: String): Connection = {
     val pass = readln(s"Enter password for role $user")
     val connectionString = s"jdbc:postgresql://localhost:5432/?user=$user&password=$pass"

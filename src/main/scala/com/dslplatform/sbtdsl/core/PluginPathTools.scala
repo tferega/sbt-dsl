@@ -2,7 +2,7 @@ package com.dslplatform.sbtdsl.core
 
 import java.nio.file.{ Files, Paths }
 
-trait PathTools {
+trait PluginPathTools {
   def checkFolders(namedPaths: (String, String)*): Unit =
     namedPaths foreach { namedPath =>
       try {

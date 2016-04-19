@@ -5,29 +5,37 @@ import Options._
 import com.dslplatform.compiler.client.{ Context => ClcContext, Main => ClcMain }
 import com.dslplatform.compiler.client.{ parameters => clc }
 import java.nio.file.Paths
+import sbt.Logger
 
-object Plugin extends DbTools with PathTools {
+object Plugin extends PluginDbTools with PluginPathTools {
   def initAndApplyDsl(
+      logger: Logger,
       namespace: String,
       scm: Options.Scm,
       targets: Seq[Target],
       db: DbParams,
       settings: Seq[Options.Settings],
       paths: PathParams): Unit = {
-    initDsl(scm, db, paths)
-    applyDsl(namespace, targets, db, settings, paths)
+    initDsl(logger, scm, db, paths)
+    applyDsl(logger, namespace, targets, db, settings, paths)
   }
 
   def initDsl(
+      logger: Logger,
       scm: Options.Scm,
       db: DbParams,
       paths: PathParams): Unit = {
+    logger.info("Initializing the DSL project")
+    logger.debug(s"SCM: $scm")
+    logger.debug(s"DB params: $db")
+    logger.debug(s"Paths: $paths")
+
     // Make sure that postgres driver is registered.
     Class.forName("org.postgresql.Driver")
 
-    // Initialize database connection.
+    logger.debug("Initializing database connection...")
     using(dbConnect("postgres")) { connection =>
-      // Check that dsl paths are not invalid, and that they do not already exist.
+      logger.debug("Verifying DSL paths...")
       checkFolders(
         ("dslTargetPath", paths.target),
         ("dslDslPath", paths.dsl),
@@ -35,18 +43,18 @@ object Plugin extends DbTools with PathTools {
         ("dslSqlPath", paths.sql))
 
       try {
-        def newPath(path: String): Unit = createPath(path)
-        def newFile(str: String, path: String, filename: String): Unit = writeToFile(str, path, filename)
+        def newPath(path: String): Unit = if (createPath(path)) { logger.warn(s"Path $path already exists!") } else { logger.debug(s"Created path $path") }
+        def newFile(str: String, path: String, filename: String): Unit = if (writeToFile(str, path, filename)) { logger.warn(s"File $path already exists!") } else { logger.debug(s"Created file $path") }
         val scalaExamplePath = Paths.get(paths.sources, "main", "scala").toFile.getPath
 
-        // Create the directory structure.
+        logger.debug("Creating the project directory structure...")
         newPath(paths.target)
         newPath(paths.dsl)
         newPath(paths.lib)
         newPath(paths.sql)
         newPath(scalaExamplePath)
 
-        // Create SCM ignore files.
+        logger.debug("Creating SCM ignore files....")
         scm match {
           case Scm.Git =>
             newFile(Templates.TargetGitignore, paths.target, ".gitignore")
@@ -54,25 +62,26 @@ object Plugin extends DbTools with PathTools {
           case _ =>
         }
 
-        // Create files needed to compile the model.
+        logger.debug("Creating files needed to compile the model...")
         newFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
         newFile(Templates.SqlScriptDrop(db.name, db.credentials.user), paths.sql, "00-drop-database.sql")
         newFile(Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass), paths.sql, "10-create-database.sql")
         newFile(Templates.ScalaExample(db.module), scalaExamplePath, "Example.scala")
       } catch {
-        case e: Exception => throw new RuntimeException(s"An error occurred while creating directory structure: ${e.getMessage}", e)
+        case e: Exception => throw new RuntimeException(s"An error occurred while creating project directory structure and needed files: ${e.getMessage}", e)
       }
 
       try {
-        // Create the database user and model.
+        logger.debug("Creating the database user and model....")
         dbExecute(connection, Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass))
       } catch {
-        case e: Exception => throw new RuntimeException(s"An error occurred while creating the database model: ${e.getMessage}", e)
+        case e: Exception => throw new RuntimeException(s"An error occurred while creating the database user or model: ${e.getMessage}", e)
       }
     }
   }
 
   def applyDsl(
+      logger: Logger,
       namespace: String,
       targets: Seq[Target],
       db: DbParams,

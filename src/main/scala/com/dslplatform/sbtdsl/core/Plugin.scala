@@ -43,16 +43,16 @@ object Plugin extends PluginDbTools with PluginPathTools {
         ("dslSqlPath", paths.sql))
 
       try {
-        def newPath(path: String): Unit = if (createPath(path)) { logger.warn(s"Path $path already exists!") } else { logger.debug(s"Created path $path") }
-        def newFile(str: String, path: String, filename: String): Unit = if (writeToPath(str, path, filename)) { logger.warn(s"File $path already exists!") } else { logger.debug(s"Created file $path") }
+        def newFolder(path: String): Unit = if (createPath(path)) { logger.warn(s"Folder $path already exists; not creating!") } else { logger.debug(s"Created path $path") }
+        def newFile(str: String, path: String, filename: String): Unit = if (writeToPath(str, path, filename)) { logger.warn(s"File $path already exists; not overwriting!") } else { logger.debug(s"Created file $path") }
         val scalaExamplePath = Paths.get(paths.sources, "main", "scala").toFile.getPath
 
         logger.debug("Creating the project directory structure...")
-        newPath(paths.target)
-        newPath(paths.dsl)
-        newPath(paths.lib)
-        newPath(paths.sql)
-        newPath(scalaExamplePath)
+        newFolder(paths.target)
+        newFolder(paths.dsl)
+        newFolder(paths.lib)
+        newFolder(paths.sql)
+        newFolder(scalaExamplePath)
 
         logger.debug("Creating SCM ignore files....")
         scm match {
@@ -73,7 +73,22 @@ object Plugin extends PluginDbTools with PluginPathTools {
 
       try {
         logger.debug("Creating the database user and model....")
-        dbExecute(connection, Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass))
+
+        val role = db.credentials.user
+        if (dbRoleExists(connection, role)) {
+          logger.warn(s"Role $role already exists; not creating!")
+        } else {
+          dbCreateRole(connection, role, db.credentials.pass)
+          logger.debug(s"Created role $role")
+        }
+
+        val model = db.name
+        if (dbModelExists(connection, model)) {
+          logger.warn(s"Model $model already exists; not creating!")
+        } else {
+          dbCreateModel(connection, model, role)
+          logger.debug(s"Created model $model")
+        }
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating the database user or model: ${e.getMessage}", e)
       }
@@ -87,6 +102,7 @@ object Plugin extends PluginDbTools with PluginPathTools {
       db: DbParams,
       settings: Seq[Options.Settings],
       paths: PathParams): Unit = {
+    logger.info("Applying DSL")
     val context = new ClcContext()
 
     // Basic settings

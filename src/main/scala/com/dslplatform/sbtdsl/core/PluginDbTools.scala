@@ -13,19 +13,29 @@ trait PluginDbTools {
     }
   }
 
-  def dbDatabaseExists(connection: Connection, name: String): Boolean = {
-    val query = s"SELECT count(datname) AS count FROM pg_catalog.pg_database WHERE datname='$name'"
+  def dbRoleExists(connection: Connection, roleName: String): Boolean = {
+    val query = s"""SELECT count(rolname) AS count FROM pg_catalog.pg_roles WHERE rolname='$roleName';"""
     val r = dbExecuteAndParse(connection, query, rs => rs.getInt("count") == 1)
     r.getOrElse(false)
   }
 
-  def dbRoleExists(connection: Connection, name: String): Boolean = {
-    val query = s"SELECT count(rolname) AS count FROM pg_catalog.pg_roles WHERE rolname='$name'"
+  def dbCreateRole(connection: Connection, roleName: String, rolePass: String): Unit = {
+    val query = s"""CREATE ROLE "$roleName" PASSWORD '$rolePass' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN;"""
+    dbExecute(connection, query)
+  }
+
+  def dbModelExists(connection: Connection, modelName: String): Boolean = {
+    val query = s"""SELECT count(datname) AS count FROM pg_catalog.pg_database WHERE datname='$modelName';"""
     val r = dbExecuteAndParse(connection, query, rs => rs.getInt("count") == 1)
     r.getOrElse(false)
   }
 
-  def dbExecuteAndParse[T](
+  def dbCreateModel(connection: Connection, modelName: String, roleName: String): Unit = {
+    val query = s"""CREATE DATABASE "$modelName" OWNER "$roleName" ENCODING 'utf8' TEMPLATE "template1";"""
+    dbExecute(connection, query)
+  }
+
+  private def dbExecuteAndParse[T](
       connection: Connection,
       query: String,
       rsParser: ResultSet => T): Option[T] =
@@ -39,6 +49,6 @@ trait PluginDbTools {
       }
     }
 
-  def dbExecute(connection: Connection, query: String): Unit =
+  private def dbExecute(connection: Connection, query: String): Unit =
     using(connection.createStatement)(_.executeUpdate(query))
 }

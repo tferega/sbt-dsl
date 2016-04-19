@@ -32,8 +32,8 @@ object SbtDslPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    dslInit := core.initAndApplyDsl(dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
-    dslApply := core.applyDsl(dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
+    dslInit := core.Plugin.initAndApplyDsl(dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
+    dslApply := core.Plugin.applyDsl(dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
 
     dslScm := Options.Scm.Git,
     dslTargets := Nil,

@@ -1,6 +1,6 @@
 package com.dslplatform.sbtdsl.core
 
-object Templates {
+private object Templates {
   val TargetGitignore =
     """*.jar
       |""".stripMargin

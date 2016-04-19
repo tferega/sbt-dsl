@@ -1,6 +1,8 @@
 package com.dslplatform.sbtdsl.core
 
 import Options._
+import PluginDbTools._
+import PluginPathTools._
 import Utils._
 
 import com.dslplatform.compiler.client.{ Context => ClcContext, Main => ClcMain }
@@ -8,7 +10,7 @@ import com.dslplatform.compiler.client.{ parameters => clc }
 import java.nio.file.Paths
 import sbt.Logger
 
-object Plugin extends PluginDbTools with PluginPathTools {
+object Plugin {
   def initAndApplyDsl(
       logger: Logger,
       namespace: String,

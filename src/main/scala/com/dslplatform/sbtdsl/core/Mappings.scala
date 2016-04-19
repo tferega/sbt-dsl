@@ -3,7 +3,7 @@ package core
 
 import Options.{ Settings, Target }
 
-private[core] object Mappings {
+private object Mappings {
   case class TargetInfo(value: String, libname: String)
 
   val settings: Map[Settings, String] = Map(

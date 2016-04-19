@@ -2,7 +2,7 @@ package com.dslplatform.sbtdsl.core
 
 import java.nio.file.{ Files, Paths }
 
-trait PluginPathTools {
+private object PluginPathTools {
   def checkPaths(namedPaths: (String, String)*): Unit =
     namedPaths foreach { namedPath =>
       try {

@@ -4,7 +4,7 @@ import Utils._
 
 import java.sql.{ Connection, DriverManager, ResultSet }
 
-trait PluginDbTools {
+private object PluginDbTools {
   def dbConnect(user: String): Connection = {
     val pass = readln(s"Enter password for role $user")
     val connectionString = s"jdbc:postgresql://localhost:5432/?user=$user&password=$pass"

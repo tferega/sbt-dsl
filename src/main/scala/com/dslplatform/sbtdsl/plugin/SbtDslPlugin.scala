@@ -8,6 +8,7 @@ object SbtDslPlugin extends AutoPlugin {
   object autoImport {
     val Options = core.Options
 
+    val dslExample = TaskKey[Unit]("dsl-example", "Creates and applies an example DSL model.")
     val dslInit = TaskKey[Unit]("dsl-init", "Initializes the DSL project, doing everything needed to start using it")
     val dslApply = TaskKey[Unit]("dsl-apply", "Apply migration on the database after creating the migration script")
 
@@ -32,8 +33,10 @@ object SbtDslPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    dslInit := core.Plugin.initAndApplyDsl(streams.value.log, dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
+    dslExample := core.Plugin.exampleDsl(streams.value.log, dslNamespace.value, dslScm.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
+    dslInit := core.Plugin.initDsl(streams.value.log, dslScm.value, dslCalculatedDb.value, dslCalculatedPaths.value, createExample = false),
     dslApply := core.Plugin.applyDsl(streams.value.log, dslNamespace.value, dslTargets.value, dslCalculatedDb.value, dslSettings.value, dslCalculatedPaths.value),
+
 
     dslScm := Options.Scm.Git,
     dslTargets := Nil,

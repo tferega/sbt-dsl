@@ -12,7 +12,7 @@ import java.nio.file.Paths
 import sbt.Logger
 
 object Plugin {
-  def initAndApplyDsl(
+  def exampleDsl(
       logger: Logger,
       namespace: String,
       scm: Options.Scm,
@@ -20,7 +20,7 @@ object Plugin {
       db: DbParams,
       settings: Seq[Options.Settings],
       paths: PathParams): Unit = {
-    initDsl(logger, scm, db, paths)
+    initDsl(logger, scm, db, paths, createExample = true)
     applyDsl(logger, namespace, targets, db, settings, paths)
   }
 
@@ -28,7 +28,8 @@ object Plugin {
       logger: Logger,
       scm: Options.Scm,
       db: DbParams,
-      paths: PathParams): Unit = {
+      paths: PathParams,
+      createExample: Boolean): Unit = {
     logger.info("Initializing the DSL project")
     logger.debug(s"SCM: $scm")
     logger.debug(s"DB params: $db")
@@ -47,8 +48,8 @@ object Plugin {
         ("dslSqlPath", paths.sql))
 
       try {
-        def newFolder(path: String): Unit = if (createPath(path)) { logger.warn(s"Folder $path already exists; not creating!") } else { logger.debug(s"Created path $path") }
-        def newFile(str: String, path: String, filename: String): Unit = if (writeToPath(str, path, filename)) { logger.warn(s"File $path already exists; not overwriting!") } else { logger.debug(s"Created file $path") }
+        def newFolder(path: String): Unit = if (createPath(path)) { logger.debug(s"Created path $path") } else { logger.warn(s"Folder $path already exists; not creating!") }
+        def newFile(str: String, path: String, filename: String): Unit = if (writeToPath(str, path, filename)) { logger.debug(s"Created file $path") } else { logger.warn(s"File $path already exists; not overwriting!") }
         val scalaExamplePath = Paths.get(paths.sources, "main", "scala").toFile.getPath
 
         logger.debug("Creating the project directory structure...")
@@ -67,10 +68,12 @@ object Plugin {
         }
 
         logger.debug("Creating files needed to compile the model...")
-        newFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
         newFile(Templates.SqlScriptDrop(db.name, db.credentials.user), paths.sql, "00-drop-database.sql")
         newFile(Templates.SqlScriptCreate(db.name, db.credentials.user, db.credentials.pass), paths.sql, "10-create-database.sql")
-        newFile(Templates.ScalaExample(db.module), scalaExamplePath, "Example.scala")
+        if (createExample) {
+          newFile(Templates.ExampleModule(db.module), paths.dsl, s"${db.module}.dsl")
+          newFile(Templates.ScalaExample(db.module), scalaExamplePath, "Example.scala")
+        }
       } catch {
         case e: Exception => throw new RuntimeException(s"An error occurred while creating project directory structure and needed files: ${e.getMessage}", e)
       }
